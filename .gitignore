@@ -1,0 +1,27 @@
+# Ignore binaries
+bin
+
+# Ignore Autotools-generated files
+aclocal.m4
+autom4te.cache/
+config.log
+config.status
+config.h.in
+configure
+configure~
+Makefile.in
+src/Makefile.in
+Makefile
+src/Makefile
+build-aux/
+include/config.h
+include/config.h.in~
+include/stamp-h1
+src/.deps/
+
+# Ignore build artifacts
+*.o
+*.a
+
+# Ignore sensitive files
+git-token.txt
