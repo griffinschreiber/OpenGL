@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "glad/glad.h"
 #include <GLFW/glfw3.h>
+
+#include "cglm/cglm.h"
+
+#include "utils/file_read.h"
 
 // https://antongerdelan.net/opengl/glcontext2.html
 // https://learnopengl.com/Getting-started/Coordinate-Systems
@@ -47,6 +52,15 @@ int main() {
                                         NULL
                                         );
   glfwMakeContextCurrent(window);
+
+  int glad_version = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+  if (glad_version == 0) {
+    fprintf(stderr, "ERROR: Failed to initialize OpenGL context.\n");
+    return 1;
+  }
+
+  printf("Renderer: %s.\n", glGetString(GL_RENDERER));
+  printf("OpenGL version supported %s.\n", glGetString(GL_VERSION));
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();

@@ -6,8 +6,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 
 AM_CFLAGS = -Wall -Werror
 
-bin_PROGRAMS = $(top_builddir)/bin/template
+bin_PROGRAMS = $(top_builddir)/bin/game
 
-__top_builddir__bin_template_LDADD = -lGL -lglfw -Llib/libcglm.a
+__top_builddir__bin_game_LDADD = -lGL -lglfw
 
-__top_builddir__bin_template_SOURCES = main.c
+__top_builddir__bin_game_SOURCES = glad.c main.c
