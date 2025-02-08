@@ -41,6 +41,10 @@ void error_callback_glfw(int error, const char *msg) {
 // terminate glfw
 
 
+void compile_shader(GLuint shader) {
+
+}
+
 int main() {
   // initialize glfw
   printf("Starting GLFW %s. \n", glfwGetVersionString());
