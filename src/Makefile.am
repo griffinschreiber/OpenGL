@@ -10,4 +10,4 @@ bin_PROGRAMS = $(top_builddir)/bin/game
 
 __top_builddir__bin_game_LDADD = -lGL -lglfw
 
-__top_builddir__bin_game_SOURCES = glad.c main.c
+__top_builddir__bin_game_SOURCES = glad.c utils/file_read.c main.c
