@@ -40,9 +40,24 @@ void error_callback_glfw(int error, const char *msg) {
 // destroy window
 // terminate glfw
 
+GLuint compile_shader(const char *file) {
+  GLuint shader = glCreateShader(GL_VERTEX_SHADER);
+  const char *shader_src = read_file(file);
+  glShaderSource(shader, 1, &shader_src, NULL);
+  glCompileShader(shader);
 
-void compile_shader(GLuint shader) {
+  int params = -1;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &params);
 
+  if (GL_TRUE != params) {
+    int max_len = 2048;
+    int len = 0;
+    char log[max_len];
+    glGetShaderInfoLog(vs, max_len, &len, log);
+    fprintf(stderr, "ERROR: shader index %u did not compile:\n%s\n", shader, log);
+    exit(1);
+  }
+  return shader;
 }
 
 int main() {
@@ -78,14 +93,7 @@ int main() {
   glfwMakeContextCurrent(window);
 
   // load gl functions with glad
-  int glad_version = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-  if (glad_version == 0) {
-    fprintf(stderr, "ERROR: Failed to initialize OpenGL context.\n");
-    return 1;
-  }
-
-  printf("Renderer: %s.\n", glGetString(GL_RENDERER));
-  printf("OpenGL version supported %s.\n", glGetString(GL_VERSION));
+  R_glad_load_gl();
 
   // initialize vbos
   float points[] = {
@@ -94,32 +102,16 @@ int main() {
     -0.5f, -0.5f, 0.0f
   };
 
-  GLuint vbo = 0;
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  GLuint vbo = R_init_vbo();
   glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), points, GL_STATIC_DRAW);
 
   // initialize vao
-  GLuint vao = 0;
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-  glEnableVertexAttribArray(0);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  GLuint vao = R_init_vao();
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
   // load shaders
-  const char *vert_shader = read_file("src/shaders/main.vert");
-  const char *frag_shader = read_file("src/shaders/main.frag");
-
-  /* printf("DEBUG: vertex shader: \n%s\n", vert_shader); */
-  /* printf("DEBUG: fragment shader: \n%s\n", frag_shader); */
-
-  GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-  glShaderSource(vs, 1, &vert_shader, NULL);
-  glCompileShader(vs);
-  GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-  glShaderSource(fs, 1, &frag_shader, NULL);
-  glCompileShader(fs);
+  GLuint vs = R_compile_shader("src/shaders/main.vert");
+  GLuint fs = R_compile_shader("src/shaders/main.frag");
 
   GLuint shader_program = glCreateProgram();
   glAttachShader(shader_program, fs);

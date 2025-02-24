@@ -22,9 +22,12 @@ explosives do knockback to enemies (depending on the enemy) and the player, allo
 speed.
 
 movement: auto-bhopping: holding down space bar will make you bhop.
-          quake-strafing: bc it's epic. not sure how much air control to give the player bc some levels may require the player not
-          to touch the ground for a while.
           way to change direction quickly without losing speed: would be good so that the player can go FAST and NOT STOP.
+          I think it's fun to have speed mechanics that are situation-dependent, i.e. you can't just do one thing and go super fast
+          all the time.
+
+note: need an incentive for the player to play aggresively and with style. maybe doing certain things successfully gives you health,
+      but there is a risk?
 
 note: if the projectile-boost (f + m1) in ultrakill was just one button it wouldn't be as fun.
       if the rocket-jump in tf2 and warfork was just one button it wouldn't be fun (see overwatch 2).
