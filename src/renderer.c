@@ -1,10 +1,15 @@
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "renderer.h"
+
+#include "utils/file_read.h"
 
 void R_glad_load_gl() {
   int glad_version = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
   if (glad_version == 0) {
     fprintf(stderr, "ERROR: Failed to initialize OpenGL context.\n");
-    return 1;
+    exit(1);
   }
 
   printf("Renderer: %s.\n", glGetString(GL_RENDERER));
@@ -12,8 +17,9 @@ void R_glad_load_gl() {
 }
 
 GLuint R_compile_shader(const char *file, GLenum shader_type) {
-  char *contents = read_file(file);
+  const char *contents = read_file(file);
   GLuint shader = glCreateShader(shader_type);
+  glShaderSource(shader, 1, &contents, NULL);
   glCompileShader(shader);
 
   int params = -1;
@@ -28,4 +34,6 @@ GLuint R_compile_shader(const char *file, GLenum shader_type) {
     fprintf(stderr, "ERROR: shader index %u (\"%s\") did not compile.\n%s\n", shader, file, log);
     exit(1);
   }
+
+  return shader;
 }

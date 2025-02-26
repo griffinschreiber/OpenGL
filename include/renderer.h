@@ -3,7 +3,6 @@
 
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
-#include "utils/file_read.h"
 
 void R_glad_load_gl();
 

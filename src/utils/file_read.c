@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 
-char *read_file(const char *path) {
+const char *read_file(const char *path) {
   FILE *file = fopen(path, "r");
   if (!file) {
     fprintf(stderr, "Could not open file at %s\n", path);

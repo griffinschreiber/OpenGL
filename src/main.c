@@ -7,6 +7,8 @@
 
 #include "utils/file_read.h"
 
+#include "renderer.h"
+
 
 // IMPORTANT: the framebuffer is measured in pixels, but the window is measured in screen coordinates
 // on some platforms these are not the same, so it is important not to confuse them.
@@ -90,8 +92,8 @@ int main() {
   glEnableVertexAttribArray(0);
 
   // load shaders
-  GLuint vs = R_compile_shader("src/shaders/main.vert");
-  GLuint fs = R_compile_shader("src/shaders/main.frag");
+  GLuint vs = R_compile_shader("src/shaders/main.vert", GL_VERTEX_SHADER);
+  GLuint fs = R_compile_shader("src/shaders/main.frag", GL_FRAGMENT_SHADER);
 
   GLuint shader_program = glCreateProgram();
   glAttachShader(shader_program, fs);
