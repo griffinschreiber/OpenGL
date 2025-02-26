@@ -11,21 +11,21 @@ void R_glad_load_gl() {
   printf("OpenGL version supported %s.\n", glGetString(GL_VERSION));
 }
 
+GLuint R_compile_shader(const char *file, GLenum shader_type) {
+  char *contents = read_file(file);
+  GLuint shader = glCreateShader(shader_type);
+  glCompileShader(shader);
 
-GLuint R_init_vbo() {
-  GLuint vbo = 0;
-  glGenBuffers(1, &vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  return vbo;
-}
+  int params = -1;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &params);
 
-GLuint R_init_vao(int *vao_index) {
-  GLuint vao = 0;
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-  return vao;
-}
+  if (params != GL_TRUE) {
+    int max = 2048;
+    int len = 0;
+    char log[max];
 
-GLuint R_compile_shader(const char *file) {
-
+    glGetShaderInfoLog(shader, max, &len, log);
+    fprintf(stderr, "ERROR: shader index %u (\"%s\") did not compile.\n%s\n", shader, file, log);
+    exit(1);
+  }
 }

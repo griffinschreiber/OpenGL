@@ -7,11 +7,6 @@
 
 #include "utils/file_read.h"
 
-// https://antongerdelan.net/opengl/glcontext2.html
-// https://learnopengl.com/Getting-started/Coordinate-Systems
-// https://github.com/recp/cglm
-
-// min version OpenGL 3.3 is probably safe
 
 // IMPORTANT: the framebuffer is measured in pixels, but the window is measured in screen coordinates
 // on some platforms these are not the same, so it is important not to confuse them.
@@ -39,26 +34,6 @@ void error_callback_glfw(int error, const char *msg) {
 // swap buffers
 // destroy window
 // terminate glfw
-
-GLuint compile_shader(const char *file) {
-  GLuint shader = glCreateShader(GL_VERTEX_SHADER);
-  const char *shader_src = read_file(file);
-  glShaderSource(shader, 1, &shader_src, NULL);
-  glCompileShader(shader);
-
-  int params = -1;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &params);
-
-  if (GL_TRUE != params) {
-    int max_len = 2048;
-    int len = 0;
-    char log[max_len];
-    glGetShaderInfoLog(vs, max_len, &len, log);
-    fprintf(stderr, "ERROR: shader index %u did not compile:\n%s\n", shader, log);
-    exit(1);
-  }
-  return shader;
-}
 
 int main() {
   // initialize glfw
@@ -102,12 +77,17 @@ int main() {
     -0.5f, -0.5f, 0.0f
   };
 
-  GLuint vbo = R_init_vbo();
-  glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), points, GL_STATIC_DRAW);
+  GLuint vbo = 0;
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
 
   // initialize vao
-  GLuint vao = R_init_vao();
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+  GLuint vao = 0;
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
+  glEnableVertexAttribArray(0);
 
   // load shaders
   GLuint vs = R_compile_shader("src/shaders/main.vert");

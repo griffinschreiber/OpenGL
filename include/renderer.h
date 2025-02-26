@@ -7,10 +7,6 @@
 
 void R_glad_load_gl();
 
-GLuint R_init_vbo();
-
-GLuint R_init_vao();
-
-GLuint R_compile_shader(const char *file);
+GLuint R_compile_shader(const char *file, GLenum shader_type);
 
 #endif // RENDERER_H_
