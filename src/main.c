@@ -7,8 +7,6 @@
 
 #include "utils/file_read.h"
 
-#include "renderer.h"
-
 
 // IMPORTANT: the framebuffer is measured in pixels, but the window is measured in screen coordinates
 // on some platforms these are not the same, so it is important not to confuse them.
@@ -18,6 +16,28 @@ void error_callback_glfw(int error, const char *msg) {
   // not sure if should exit for every error: some may be non-fatal
   glfwTerminate();
   exit(1);
+}
+
+GLuint compile_shader(const char *file, GLenum shader_type) {
+  const char *contents = read_file(file);
+  GLuint shader = glCreateShader(shader_type);
+  glShaderSource(shader, 1, &contents, NULL);
+  glCompileShader(shader);
+
+  int params = -1;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &params);
+
+  if (params != GL_TRUE) {
+    int max = 2048;
+    int len = 0;
+    char log[max];
+
+    glGetShaderInfoLog(shader, max, &len, log);
+    fprintf(stderr, "ERROR: shader index %u (\"%s\") did not compile.\n%s\n", shader, file, log);
+    exit(1);
+  }
+
+  return shader;
 }
 
 // need debug printf function
@@ -38,7 +58,6 @@ void error_callback_glfw(int error, const char *msg) {
 // terminate glfw
 
 int main() {
-  // initialize glfw
   printf("Starting GLFW %s. \n", glfwGetVersionString());
 
   glfwSetErrorCallback(error_callback_glfw);
@@ -58,25 +77,66 @@ int main() {
   // intialize window
   GLFWmonitor *monitor = NULL;
 
-  int win_w = 800;
-  int win_h = 600;
+  int width = 800;
+  int height = 600;
 
-  GLFWwindow *window = glfwCreateWindow(win_w,
-                                        win_h,
-                                        "GLFW Template",
+  GLFWwindow *window = glfwCreateWindow(width,
+                                        height,
+                                        "Game",
                                         monitor,
                                         NULL
                                         );
   glfwMakeContextCurrent(window);
 
-  // load gl functions with glad
-  R_glad_load_gl();
+   int glad_version = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+  if (glad_version == 0) {
+    fprintf(stderr, "ERROR: Failed to initialize OpenGL context.\n");
+    exit(1);
+  }
 
-  // initialize vbos
+  printf("Renderer: %s.\n", glGetString(GL_RENDERER));
+  printf("OpenGL version supported %s.\n", glGetString(GL_VERSION));
+
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
+
   float points[] = {
-    0.0f, 0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f
+    -1.0f,-1.0f,-1.0f,
+    -1.0f,-1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    1.0f, 1.0f,-1.0f,
+    -1.0f,-1.0f,-1.0f,
+    -1.0f, 1.0f,-1.0f,
+    1.0f,-1.0f, 1.0f,
+    -1.0f,-1.0f,-1.0f,
+    1.0f,-1.0f,-1.0f,
+    1.0f, 1.0f,-1.0f,
+    1.0f,-1.0f,-1.0f,
+    -1.0f,-1.0f,-1.0f,
+    -1.0f,-1.0f,-1.0f,
+    -1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f,-1.0f,
+    1.0f,-1.0f, 1.0f,
+    -1.0f,-1.0f, 1.0f,
+    -1.0f,-1.0f,-1.0f,
+    -1.0f, 1.0f, 1.0f,
+    -1.0f,-1.0f, 1.0f,
+    1.0f,-1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+    1.0f,-1.0f,-1.0f,
+    1.0f, 1.0f,-1.0f,
+    1.0f,-1.0f,-1.0f,
+    1.0f, 1.0f, 1.0f,
+    1.0f,-1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+    1.0f, 1.0f,-1.0f,
+    -1.0f, 1.0f,-1.0f,
+    1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f,-1.0f,
+    -1.0f, 1.0f, 1.0f,
+    1.0f, 1.0f, 1.0f,
+    -1.0f, 1.0f, 1.0f,
+    1.0f,-1.0f, 1.0f
   };
 
   GLuint vbo = 0;
@@ -84,53 +144,61 @@ int main() {
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
 
-  // initialize vao
   GLuint vao = 0;
   glGenVertexArrays(1, &vao);
   glBindVertexArray(vao);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
   glEnableVertexAttribArray(0);
 
-  // load shaders
-  GLuint vs = R_compile_shader("src/shaders/main.vert", GL_VERTEX_SHADER);
-  GLuint fs = R_compile_shader("src/shaders/main.frag", GL_FRAGMENT_SHADER);
+  GLuint vs = compile_shader("src/shaders/main.vert", GL_VERTEX_SHADER);
+  GLuint fs = compile_shader("src/shaders/main.frag", GL_FRAGMENT_SHADER);
 
   GLuint shader_program = glCreateProgram();
   glAttachShader(shader_program, fs);
   glAttachShader(shader_program, vs);
   glLinkProgram(shader_program);
 
-  // main loop
+  double cursor_x, cursor_y;
+
+  vec3 pos = {-3, 0, 0};
+  vec3 dir = {1, 0, 0};
+  vec3 up = {0, 1, 0};
+
+  /* float pitch = 0; */
+  /* float yaw = 0; */
+
+  mat4 projection, view, model, mvp;
+  glm_perspective(glm_rad(75), (float)width / height, 0.1, 100, projection);
+  glm_lookat(glm_vec3_add(pos, dir), pos, up, view);
+  glm_mat4_identity(model);
+  glm_mat4_mulN({projection, view, model}, 3, mvp);
+
   while (!glfwWindowShouldClose(window)) {
-    // poll events
     glfwPollEvents();
-    // handle keypresses
     if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_ESCAPE)) {
       glfwSetWindowShouldClose(window, 1);
     }
 
-    // handle resize
-    glfwGetFramebufferSize(window, &win_w, &win_h);
-    glViewport(0, 0, win_w, win_h);
+    glfwGetCursorPos(window, &cursor_x, &cursor_y);
 
-    // clear color and depth buffer
+    glfwGetFramebufferSize(window, &width, &height);
+    glViewport(0, 0, width, height);
+
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // put the shader program and vao in the focus of the opengl state machine
+    int mvp_loc = glGetUniformLocation(shader_program, "mvp");
+
     glUseProgram(shader_program);
+    glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, &mvp[0][0]);
     glBindVertexArray(vao);
 
-    // draw
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
-    // swap buffers
     glfwSwapBuffers(window);
   }
 
-  // destroy window
   glfwDestroyWindow(window);
-  // terminate glfw
   glfwTerminate();
 
   return 0;
