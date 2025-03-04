@@ -169,9 +169,11 @@ int main() {
 
   mat4 projection, view, model, mvp;
   glm_perspective(glm_rad(75), (float)width / height, 0.1, 100, projection);
-  glm_lookat(glm_vec3_add(pos, dir), pos, up, view);
+  vec3 look_pos;
+  glm_vec3_add(pos, dir, look_pos);
+  glm_lookat(look_pos, pos, up, view);
   glm_mat4_identity(model);
-  glm_mat4_mulN({projection, view, model}, 3, mvp);
+  glm_mat4_mulN((mat4 *[]){projection, view, model}, 3, mvp);
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
