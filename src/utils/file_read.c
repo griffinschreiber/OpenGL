@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 
-const char *read_file(const char *path) {
+char *read_file(const char *path) {
   FILE *file = fopen(path, "r");
   if (!file) {
     fprintf(stderr, "Could not open file at %s\n", path);
@@ -29,7 +29,7 @@ const char *read_file(const char *path) {
     exit(1);
   }
 
-  buffer[size + 1] = '\0';
+  buffer[size] = '\0';
   fclose(file);
   return buffer;
 }

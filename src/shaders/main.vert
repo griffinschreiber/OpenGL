@@ -1,8 +1,7 @@
-#version 330 core
-in vec3 vertex_position;
+#version 420 core
 
-uniform mat4 mvp;
+layout (location = 0) in vec3 pos;
 
 void main() {
-     gl_Position = mvp * vec4(vertex_position, 1.0);
+     gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
 }
