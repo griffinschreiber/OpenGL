@@ -10,6 +10,9 @@
 // IMPORTANT: the framebuffer is measured in pixels, but the window is measured in screen coordinates
 // on some platforms these are not the same, so it is important not to confuse them.
 
+// IMPORTANT: shader uniforms that don't actively contribute to the pipeline output
+// are not assigned locations by the GLSL compiler. This can lead to unexpected bugs.
+
 // need debug printf function
 
 GLFWmonitor *monitor = NULL;
@@ -20,6 +23,7 @@ double cursor_x, cursor_y;
 GLuint vao, vbo, vs, fs, shader_program;
 char *vs_src, *fs_src;
 
+// pretty sure I can detach and delete the shaders once the shader program has been made.
 void die(int exit_code) {
   glDisableVertexAttribArray(0);
   glDetachShader(shader_program, vs);
@@ -63,6 +67,22 @@ GLuint compile_shader(const char *shader_src, GLenum shader_type) {
   return shader;
 }
 
+void print_vec3(vec3 v) {
+  for (int i = 0; i < 3; i++) {
+    printf("%f ", v[i]);
+  }
+  printf("\n");
+}
+
+void print_mat4(mat4 m) {
+  for (int j = 0; j < 4; j++) {
+    for (int i = 0; i < 4; i++) {
+      printf("%f ", m[i][j]);
+    }
+    printf("\n");
+  }
+}
+
 void init() {
   printf("Starting GLFW %s. \n", glfwGetVersionString());
 
@@ -99,9 +119,9 @@ void init() {
   glBindVertexArray(vao);
 
   float points[] = {
-    0.0f, 0.5f, 0.0f,
-    0.5f, -0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f
+    -1.0f, -1.0f, 0.0f,
+    1.0f, -1.0f, 0.0f,
+    0.0f, 1.0f, 0.0f
   };
 
   glGenBuffers(1, &vbo);
@@ -111,10 +131,10 @@ void init() {
   vs_src = read_file("src/shaders/main.vert");
   fs_src = read_file("src/shaders/main.frag");
 
-  GLuint vs = compile_shader(vs_src, GL_VERTEX_SHADER);
-  GLuint fs = compile_shader(fs_src, GL_FRAGMENT_SHADER);
+  vs = compile_shader(vs_src, GL_VERTEX_SHADER);
+  fs = compile_shader(fs_src, GL_FRAGMENT_SHADER);
 
-  GLuint shader_program = glCreateProgram();
+  shader_program = glCreateProgram();
 
   glAttachShader(shader_program, vs);
   glAttachShader(shader_program, fs);
@@ -156,6 +176,33 @@ void init() {
 int main() {
   init();
 
+  mat4 projection, view, model, mvp;
+  vec3 pos, target, up;
+
+  glm_vec3_make((float []){-3.0f, 3.0f, 0.0f}, pos);
+  glm_vec3_make((float []){0.0f, 0.0f, 0.0f}, target);
+  glm_vec3_make((float []){0.0f, 1.0f, 0.0f}, up);
+
+  glm_perspective(glm_rad(45.0f), (float)width / height,
+                  0.1f, 100.0f, projection);
+  glm_lookat(pos, target, up, view);
+  glm_mat4_identity(model);
+
+  glm_mat4_mulN((mat4 *[]){&projection, &view, &model}, 3, mvp);
+
+  print_mat4(view);
+  printf("\n");
+  print_mat4(projection);
+  printf("\n");
+  print_mat4(mvp);
+
+  GLuint mvp_loc = glGetUniformLocation(shader_program, "mvp");
+
+  if (mvp_loc == -1) {
+    fprintf(stderr, "ERROR: failed to find a shader uniform.\n");
+    die(1);
+  }
+
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
     if (GLFW_PRESS == glfwGetKey(window, GLFW_KEY_ESCAPE)) {
@@ -172,6 +219,8 @@ int main() {
     glEnableVertexAttribArray(0);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+
+    glUniformMatrix4fv(mvp_loc, 1, GL_FALSE, &mvp[0][0]);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
