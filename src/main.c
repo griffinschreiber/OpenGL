@@ -179,11 +179,11 @@ int main() {
   mat4 projection, view, model, mvp;
   vec3 pos, target, up;
 
-  glm_vec3_make((float []){-3.0f, 3.0f, 0.0f}, pos);
+  glm_vec3_make((float []){-3.0f, 0.0f, 0.0f}, pos);
   glm_vec3_make((float []){0.0f, 0.0f, 0.0f}, target);
   glm_vec3_make((float []){0.0f, 1.0f, 0.0f}, up);
 
-  glm_perspective(glm_rad(45.0f), (float)width / height,
+  glm_perspective(glm_rad(45.0f), 1.0f,
                   0.1f, 100.0f, projection);
   glm_lookat(pos, target, up, view);
   glm_mat4_identity(model);
